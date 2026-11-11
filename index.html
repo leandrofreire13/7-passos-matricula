@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
   <div class="app-shell">
@@ -23,9 +23,6 @@
     <main>
       <header class="topbar">
         <button class="icon-button menu-button" id="menuToggle" aria-label="Abrir menu">☰</button>
-        <div class="search-wrap"><span>⌕</span><input id="search" type="search" placeholder="Buscar no roteiro…" aria-label="Buscar no roteiro"></div>
-        <button class="button ghost" id="focusToggle" type="button">Modo foco</button>
-        <button class="button primary" id="editToggle" type="button">Editar textos</button>
       </header>
 
       <section class="variable-bar" aria-label="Variáveis do roteiro">
@@ -48,7 +45,6 @@
     </main>
   </div>
 
-  <button class="focus-exit" id="focusExit" type="button" aria-label="Sair do modo foco">← Sair do modo foco <kbd>Esc</kbd></button>
   <div class="editor-toolbar" id="editor" aria-hidden="true">
     <div class="toolbar-brand"><strong>Editor visual</strong><small>Selecione qualquer texto</small></div>
     <div class="toolbar-group"><button type="button" data-command="undo">↶</button><button type="button" data-command="redo">↷</button></div>

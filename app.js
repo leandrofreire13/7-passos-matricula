@@ -106,15 +106,10 @@ function renderSaved(data){motivation.innerHTML=data.motivation;content.innerHTM
 function setEditing(value){editing=value;document.body.classList.toggle('editing',value);document.querySelectorAll('[data-editable]').forEach(el=>el.setAttribute('contenteditable',value));$('#editor').classList.toggle('open',value);$('#editor').setAttribute('aria-hidden',!value);if(value){document.querySelectorAll('.step-card').forEach(c=>c.classList.remove('collapsed'));setTimeout(()=>document.querySelector('.step-card [data-editable]')?.focus(),250)}}
 function toast(text){const t=$('#toast');t.textContent=text;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 
-$('#editToggle').onclick=$('#editToggleSide').onclick=()=>setEditing(true);$('#closeEditor').onclick=$('#finishEditing').onclick=()=>{save(false);buildNav();setEditing(false);toast('Documento salvo')};
+$('#editToggleSide').onclick=()=>setEditing(true);$('#closeEditor').onclick=$('#finishEditing').onclick=()=>{save(false);buildNav();setEditing(false);toast('Documento salvo')};
 $('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('open');
 ['personName','referrerName','sellerName'].forEach(id=>$('#'+id).addEventListener('input',applyVariables));
 $('#clearVariables').onclick=()=>{['personName','referrerName','sellerName'].forEach(id=>$('#'+id).value='');applyVariables();$('#personName').focus()};
-function setFocusMode(active){document.body.classList.toggle('focus',active);$('#focusToggle').textContent=active?'Sair do foco':'Modo foco'}
-$('#focusToggle').onclick=()=>setFocusMode(!document.body.classList.contains('focus'));
-$('#focusExit').onclick=()=>setFocusMode(false);
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('focus'))setFocusMode(false)});
-$('#search').addEventListener('input',e=>{const q=cleanText(e.target.value).toLowerCase();let hits=0;document.querySelectorAll('.step-card').forEach(card=>{const yes=!q||card.textContent.toLowerCase().includes(q);card.hidden=!yes;if(yes)hits++});$('#emptyState').hidden=hits>0});
 document.querySelectorAll('[data-command]').forEach(button=>button.addEventListener('mousedown',event=>{event.preventDefault();document.execCommand(button.dataset.command,false,null);save(false)}));
 $('#blockFormat').addEventListener('change',event=>{document.execCommand('formatBlock',false,event.target.value);save(false)});
 $('#textColor').addEventListener('input',event=>{document.execCommand('foreColor',false,event.target.value);save(false)});
