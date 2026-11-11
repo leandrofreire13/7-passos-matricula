@@ -13,3 +13,9 @@
 /* Barra superior reservada ao menu de navegacao no celular. */
 .topbar{display:none}
 @media(max-width:850px){.topbar{display:flex}}
+
+/* Mantem os nomes visiveis durante a leitura do roteiro. */
+.variable-bar{position:sticky;top:0;z-index:11}
+.editing .variable-bar{top:76px}
+@media(max-width:900px){.editing .variable-bar{top:132px}}
+@media(max-width:850px){.variable-bar{top:76px}.editing .variable-bar{top:208px}}
