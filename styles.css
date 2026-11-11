@@ -30,3 +30,5 @@ body.focus .variable-bar{display:flex;top:0}
 @media(max-width:850px){.editing .variable-bar{top:calc(var(--editor-height,132px) + 76px)}}
 
 .editor-toolbar .button.ghost{display:block}.toolbar-link{white-space:nowrap}
+
+.publish-fallback{margin-top:18px;border:1px solid var(--line);padding:14px;border-radius:10px}.publish-fallback summary{cursor:pointer;font-weight:700}.publish-fallback a,.publish-fallback .toolbar-link{color:#ff86b8}.publish-fallback ol{padding-left:20px;line-height:1.65;font-size:13px}.publish-fallback li{margin:10px 0}.publish-fallback p{font-size:13px}.publish-fallback .toolbar-link{padding:0;text-align:left;white-space:normal}

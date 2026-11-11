@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
   <div class="app-shell">
@@ -73,13 +73,23 @@
       <p>O texto será salvo no site e ficará disponível em qualquer navegador. Os nomes preenchidos continuam apenas neste navegador.</p>
       <label for="githubToken">Credencial do GitHub</label>
       <input id="githubToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Cole seu token de acesso">
-      <p class="publish-help">Use um <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">token com acesso somente ao repositório 7-passos-matricula</a> e permissão <strong>Contents: Read and write</strong>. A credencial é enviada apenas ao GitHub e não fica salva no site.</p>
+      <p class="publish-help">Use um <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">token com acesso somente ao repositório 7-passos-matricula</a> e permissão <strong>Contents: Read and write</strong>. Escolha <strong>Only select repositories</strong> e selecione <strong>7-passos-matricula</strong>; a opção <strong>Public repositories</strong> permite apenas leitura. A credencial é enviada apenas ao GitHub e não fica salva no site.</p>
       <p id="publishMessage" role="status" aria-live="polite"></p>
+      <details class="publish-fallback" id="publishFallback">
+        <summary>Publicar pelo GitHub sem token</summary>
+        <p>Use seu login normal do GitHub para enviar o texto editado:</p>
+        <ol>
+          <li><button class="toolbar-link" id="downloadPublication" type="button">Baixar arquivo para publicar</button></li>
+          <li><a href="https://github.com/leandrofreire13/7-passos-matricula/upload/main" target="_blank" rel="noopener noreferrer">Abrir envio no GitHub</a> e enviar o arquivo <strong>published-content.json</strong> que acabou de baixar.</li>
+          <li>Clicar em <strong>Commit changes</strong> para salvar na branch <strong>main</strong>.</li>
+        </ol>
+        <p>Baixar o arquivo não publica o texto. A publicação acontece quando você confirma o envio no GitHub.</p>
+      </details>
       <div class="publish-actions"><button class="button ghost" id="cancelPublish" type="button">Cancelar</button><button class="button primary" id="confirmPublish" type="submit">Publicar agora</button></div>
     </form>
   </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="shared-content.js?v=11"></script>
-  <script src="app.js?v=11"></script>
+  <script src="shared-content.js?v=12"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

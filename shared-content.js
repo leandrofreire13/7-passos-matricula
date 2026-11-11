@@ -49,16 +49,29 @@ const SharedContent=(()=>{
   }
   function decode(value){return new TextDecoder().decode(Uint8Array.from(atob(value.replace(/\s/g,'')),char=>char.charCodeAt(0)))}
   function encode(value){const bytes=new TextEncoder().encode(value);let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary)}
+  function publicationFile(snapshot){return {version:1,revision:crypto.randomUUID(),snapshot:normalize(snapshot)}}
+  async function githubError(response,token){
+    let detail='';
+    try{const body=await response.json();detail=String(body.message||'').split(token).join('[oculto]').slice(0,400)}catch{}
+    let help='O GitHub recusou a publicação.';
+    if(response.status===401)help='A credencial está inválida ou expirada. Gere um novo token.';
+    else if(response.status===429||response.headers.get('x-ratelimit-remaining')==='0'||/rate limit/i.test(detail))help='O limite temporário de requisições do GitHub foi atingido. Aguarde antes de tentar novamente.';
+    else if(response.status===403)help='O token não autorizou a gravação. Na configuração do token, selecione Only select repositories > 7-passos-matricula e Contents > Read and write. Public repositories concede apenas leitura.';
+    else if(response.status===404)help='O token não tem acesso ao repositório. Confira o proprietário leandrofreire13 e o repositório 7-passos-matricula.';
+    else if(response.status===409)help='Outra publicação aconteceu ao mesmo tempo. Recarregue a versão publicada antes de tentar novamente.';
+    else if(response.status===422)help='O GitHub não aceitou os dados ou as regras de publicação. Veja o detalhe abaixo.';
+    return new Error(`${help} (HTTP ${response.status})${detail?' GitHub: '+detail:''} Seu rascunho foi preservado.`);
+  }
   async function publish(snapshot,token,baseRevision){
     const headers={Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2026-03-10'};
     const current=await fetch(api+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(15000)});
-    if(!current.ok)throw new Error(current.status===401?'Credencial inválida ou expirada.':'Não foi possível acessar o repositório. Verifique a permissão Contents: Read and write.');
+    if(!current.ok)throw await githubError(current,token);
     const file=await current.json();const previous=envelope(JSON.parse(decode(file.content)));
     if(previous.revision!==baseRevision)throw new Error('Há uma nova versão publicada. Feche esta janela e use Ver publicado antes de editar e publicar novamente. Seu rascunho continua salvo neste navegador.');
-    const data={version:1,revision:crypto.randomUUID(),snapshot:normalize(snapshot)};
+    const data=publicationFile(snapshot);
     const response=await fetch(api,{method:'PUT',headers,signal:AbortSignal.timeout(20000),body:JSON.stringify({message:'Publica roteiro editado pelo site',branch:'main',sha:file.sha,content:encode(JSON.stringify(data,null,2)+'\n')})});
-    if(!response.ok)throw new Error(response.status===409?'Outra publicação aconteceu ao mesmo tempo. Recarregue a versão publicada antes de tentar novamente.':'O GitHub recusou a publicação. Verifique a credencial e a permissão de escrita no repositório.');
+    if(!response.ok)throw await githubError(response,token);
     return data;
   }
-  return {normalize,read,publish};
+  return {normalize,read,publish,publicationFile};
 })();

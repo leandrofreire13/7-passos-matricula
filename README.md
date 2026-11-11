@@ -23,3 +23,5 @@ node tests/shared-persistence.cjs
 ```
 
 A suíte usa navegadores isolados e respostas simuladas da API; não publica conteúdo de teste no repositório. Defina `CHROME_PATH` se o executável do Chrome estiver em outro local.
+
+Se a API recusar a publicação, o site mostra o código HTTP e a mensagem do GitHub. Em **Publicar pelo GitHub sem token**, baixe `published-content.json`, envie-o pelo link indicado e confirme **Commit changes**. O arquivo baixado sozinho ainda não foi publicado.

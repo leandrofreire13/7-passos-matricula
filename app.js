@@ -143,7 +143,7 @@ $('#viewPublished').onclick=()=>{if(confirm('Abrir o conteúdo publicado? Seu ra
 $('#recoverDraft').onclick=()=>{
   try{const recovery=localStorage.getItem(STORAGE_KEY+'-recovery');if(!recovery){toast('Nenhum rascunho anterior para recuperar');return}const recovered=JSON.parse(recovery);const data=SharedContent.normalize(recovered);localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,draft:true,baseRevision:recovered.baseRevision}));location.reload()}catch{toast('Não foi possível recuperar o rascunho')}
 };
-$('#publishContent').onclick=()=>{save(false);$('#publishMessage').textContent='';$('#publishDialog').showModal();$('#githubToken').focus()};
+$('#publishContent').onclick=()=>{save(false);$('#publishMessage').textContent='';$('#publishFallback').open=false;$('#publishDialog').showModal();$('#githubToken').focus()};
 $('#cancelPublish').onclick=()=>$('#publishDialog').close();
 $('#publishDialog').addEventListener('close',()=>{$('#githubToken').value=''});
 $('#publishDialog').addEventListener('cancel',event=>{if(publishing)event.preventDefault()});
@@ -163,8 +163,18 @@ $('#publishForm').addEventListener('submit',async event=>{
     updateSaveStatus();$('#publishDialog').close();
     if(!changed){buildNav();setEditing(false)}
     toast('Publicado! O texto já esta disponível ao abrir o site em outro navegador.');
-  }catch(error){$('#publishMessage').textContent=error.message||'Falha de conexão. Seu rascunho foi preservado. Verifique a versão publicada antes de tentar novamente.'}
+  }catch(error){$('#publishFallback').open=true;$('#publishMessage').textContent=error.message||'Falha de conexão. Seu rascunho foi preservado. Verifique a versão publicada antes de tentar novamente.'}
   finally{token='';publishing=false;$('#confirmPublish').disabled=false;$('#cancelPublish').disabled=false}
 });
 
 new ResizeObserver(entries=>{document.documentElement.style.setProperty('--editor-height',entries[0].target.getBoundingClientRect().height+'px')}).observe($('#editor'));
+
+$('#downloadPublication').onclick=()=>{
+  try{
+    save(false);
+    const file=SharedContent.publicationFile(snapshot());
+    const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)+'\n'],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download='published-content.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    $('#publishMessage').textContent='Arquivo preparado. Agora envie published-content.json no GitHub e confirme em Commit changes para publicar.';
+  }catch(error){$('#publishMessage').textContent=error.message}
+};
