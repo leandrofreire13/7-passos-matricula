@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <div class="app-shell">
@@ -17,6 +17,7 @@
       <div class="brand"><span class="brand-mark">7</span><div><strong>Passos</strong><small>Guia de matrícula</small></div></div>
       <nav id="stepNav" aria-label="Etapas do roteiro"></nav>
       <button class="sidebar-edit" id="editToggleSide" type="button">✦ Editar conteúdo</button>
+      <button class="view-published" id="viewPublished" type="button" hidden>Ver publicado</button>
       <p class="save-status" id="saveStatus">Conteúdo original</p>
     </aside>
 
@@ -57,14 +58,28 @@
     </div>
     <div class="toolbar-group"><button type="button" id="addParagraph">＋ Parágrafo</button><button type="button" id="deleteBlock">Excluir bloco</button></div>
     <div class="toolbar-spacer"></div>
+    <button class="toolbar-link" id="recoverDraft" type="button">Recuperar rascunho</button>
     <button class="toolbar-link" id="exportContent" type="button">Backup</button>
     <label class="toolbar-link file-label">Importar<input type="file" id="importContent" accept="application/json"></label>
-    <button class="toolbar-link danger" id="resetContent" type="button">Restaurar</button>
-    <button class="button primary" id="finishEditing" type="button">Salvar e sair</button>
+    <button class="toolbar-link danger" id="resetContent" type="button">Descartar rascunho</button>
+    <button class="button ghost" id="finishEditing" type="button">Salvar rascunho</button>
+    <button class="button primary" id="publishContent" type="button">Publicar no site</button>
     <button class="icon-button" id="closeEditor" type="button">×</button>
   </div>
 
+  <dialog class="publish-dialog" id="publishDialog" aria-labelledby="publishTitle">
+    <form id="publishForm">
+      <h2 id="publishTitle">Publicar para todos</h2>
+      <p>O texto será salvo no site e ficará disponível em qualquer navegador. Os nomes preenchidos continuam apenas neste navegador.</p>
+      <label for="githubToken">Credencial do GitHub</label>
+      <input id="githubToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Cole seu token de acesso">
+      <p class="publish-help">Use um <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">token com acesso somente ao repositório 7-passos-matricula</a> e permissão <strong>Contents: Read and write</strong>. A credencial é enviada apenas ao GitHub e não fica salva no site.</p>
+      <p id="publishMessage" role="status" aria-live="polite"></p>
+      <div class="publish-actions"><button class="button ghost" id="cancelPublish" type="button">Cancelar</button><button class="button primary" id="confirmPublish" type="submit">Publicar agora</button></div>
+    </form>
+  </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=10"></script>
+  <script src="shared-content.js?v=11"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

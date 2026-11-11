@@ -4,7 +4,7 @@ const STORAGE_KEY='roteiro-7-passos-v2';
 const VARIABLE_KEY='roteiro-7-passos-variaveis';
 const $=s=>document.querySelector(s);
 const content=$('#content'), motivation=$('#motivationContent'), nav=$('#stepNav');
-let editing=false, saveTimer;
+let editing=false, saveTimer, published={revision:'original',snapshot:null}, hasDraft=false, publishing=false, publishedAvailable=false, draftBaseRevision='original';
 
 const cleanText=s=>s.replace(/\s+/g,' ').trim();
 const slug=s=>cleanText(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -21,33 +21,32 @@ function getVariables(){try{return JSON.parse(localStorage.getItem(VARIABLE_KEY)
 function applyVariables(){const values={person:$('#personName').value.trim(),referrer:$('#referrerName').value.trim(),seller:$('#sellerName').value.trim()};document.querySelectorAll('.variable-value').forEach(span=>{const value=values[span.dataset.variable];span.textContent=value||span.dataset.placeholder;span.classList.toggle('empty',!value)});try{localStorage.setItem(VARIABLE_KEY,JSON.stringify(values))}catch{}}
 function initializeVariables(){wrapVariables(motivation);wrapVariables(content);const values=getVariables();$('#personName').value=values.person||'';$('#referrerName').value=values.referrer||'';$('#sellerName').value=values.seller||'';applyVariables()}
 
-function load(){
+async function load(){
   let saved=null;
-  try{saved=localStorage.getItem(STORAGE_KEY)}catch(error){console.warn('Armazenamento local indisponível.',error)}
-  if(saved){
-    try{
-      const parsed=JSON.parse(saved);
-      if(!parsed?.content||!parsed?.motivation)throw new Error('Snapshot incompleto');
-      renderSaved(parsed);
-      return;
-    }catch(error){
-      console.warn('Backup local incompatível; carregando a fonte original.',error);
-      localStorage.removeItem(STORAGE_KEY);
-    }
+  try{saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(error){console.warn('Rascunho local indisponível.',error)}
+  try{published=await SharedContent.read();publishedAvailable=true;draftBaseRevision=published.revision}catch(error){toast(error.message)}
+  if(saved&&saved.draft!==false){
+    try{renderSaved(SharedContent.normalize(saved));hasDraft=true;draftBaseRevision=saved.baseRevision||published.revision;updateSaveStatus();return}catch(error){console.warn('Rascunho incompatível; preservado no armazenamento.',error)}
   }
-  try{
-    const encoded=$('#sourceSnapshot')?.textContent.trim();
-    if(!encoded)throw new Error('Conteúdo incorporado não encontrado');
-    const bytes=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
-    const html=new TextDecoder('utf-8').decode(bytes);
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    buildFromSource(doc.body);
-    save(false);
-  }catch(err){
-    $('#loading').hidden=false;
-    $('#loading').innerHTML=`<div><p><strong>Não foi possível abrir o roteiro.</strong></p><p>${err.message}</p><button class="button primary" onclick="location.reload()">Tentar novamente</button></div>`;
-    console.error(err);
+  if(published.snapshot){renderSaved(published.snapshot);hasDraft=false;updateSaveStatus();return}
+  if(saved&&saved.draft===false&&!publishedAvailable){
+    try{renderSaved(SharedContent.normalize(saved));updateSaveStatus();return}catch(error){console.warn(error)}
   }
+  const encoded=$('#sourceSnapshot')?.textContent.trim();
+  if(!encoded)throw new Error('Conteúdo incorporado não encontrado');
+  const bytes=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
+  const doc=new DOMParser().parseFromString(new TextDecoder('utf-8').decode(bytes),'text/html');
+  buildFromSource(doc.body);hasDraft=false;updateSaveStatus();
+}
+function updateSaveStatus(){
+  $('#saveStatus').textContent=hasDraft?'Rascunho salvo neste navegador':published.snapshot?'Conteúdo publicado':'Conteúdo original';
+  $('#viewPublished').hidden=!(hasDraft&&publishedAvailable);
+}
+function showPublished(){
+  clearTimeout(saveTimer);
+  // Keep a separate recovery copy before switching to the public version.
+  try{const draft=localStorage.getItem(STORAGE_KEY);if(draft)localStorage.setItem(STORAGE_KEY+'-recovery',draft);localStorage.removeItem(STORAGE_KEY)}catch{toast('Não foi possível guardar o rascunho. Exporte um backup antes de continuar.');return}
+  location.reload();
 }
 
 function buildFromSource(body){
@@ -100,13 +99,18 @@ function finishRender(){
 }
 function buildNav(){nav.innerHTML='';document.querySelectorAll('.step-card').forEach((card,i)=>{const a=document.createElement('a');a.href='#'+card.id;a.innerHTML=`<span>${i+1}</span>${card.querySelector('h2').textContent}`;nav.append(a)})}
 function observeSteps(){const links=[...nav.querySelectorAll('a')];new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id))}}),{rootMargin:'-30% 0px -60%'}).observe;document.querySelectorAll('.step-card').forEach(card=>{new IntersectionObserver(es=>{if(es[0].isIntersecting)links.forEach(a=>a.classList.toggle('active',a.hash==='#'+card.id))},{rootMargin:'-30% 0px -60%'}).observe(card)})}
-function snapshot(){return{motivation:motivation.innerHTML,content:content.innerHTML,updated:new Date().toISOString()}}
-function save(show=true){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot()));$('#saveStatus').textContent='Salvo neste navegador';if(show)toast('Alterações salvas')}catch(error){console.warn('Não foi possível salvar localmente.',error);$('#saveStatus').textContent='Salvamento local indisponível'}}
-function renderSaved(data){motivation.innerHTML=data.motivation;content.innerHTML=data.content;content.querySelectorAll('.step-card').forEach(card=>card.querySelector('.step-header').addEventListener('click',e=>{if(editing&&e.target.closest('[data-editable]'))return;card.classList.toggle('collapsed')}));content.querySelectorAll('.sub-collapse>button').forEach(b=>b.addEventListener('click',()=>{if(!editing)b.nextElementSibling.hidden=!b.nextElementSibling.hidden}));finishRender()}
-function setEditing(value){editing=value;document.body.classList.toggle('editing',value);document.querySelectorAll('[data-editable]').forEach(el=>el.setAttribute('contenteditable',value));$('#editor').classList.toggle('open',value);$('#editor').setAttribute('aria-hidden',!value);if(value){document.querySelectorAll('.step-card').forEach(c=>c.classList.remove('collapsed'));setTimeout(()=>document.querySelector('.step-card [data-editable]')?.focus(),250)}}
+function snapshot(){return SharedContent.normalize({motivation:motivation.innerHTML,motivationTitle:$('.motivation-title strong').innerHTML,content:content.innerHTML,updated:new Date().toISOString()})}
+function save(show=true){
+  if(!hasDraft)draftBaseRevision=published.revision;
+  hasDraft=true;
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...snapshot(),draft:true,baseRevision:draftBaseRevision}));updateSaveStatus();if(show)toast('Rascunho salvo neste navegador')}catch(error){console.warn('Não foi possível salvar localmente.',error);$('#saveStatus').textContent='Falha ao salvar rascunho';toast('Não foi possível salvar. Exporte um backup antes de sair.')}
+}
+
+function renderSaved(data){$('.motivation-title strong').innerHTML=data.motivationTitle||'Seja ousado!';motivation.innerHTML=data.motivation;content.innerHTML=data.content;content.querySelectorAll('.step-card').forEach(card=>card.querySelector('.step-header').addEventListener('click',e=>{if(editing&&e.target.closest('[data-editable]'))return;card.classList.toggle('collapsed')}));content.querySelectorAll('.sub-collapse>button').forEach(b=>b.addEventListener('click',()=>{if(!editing)b.nextElementSibling.hidden=!b.nextElementSibling.hidden}));finishRender()}
+function setEditing(value){if(value)$('#sidebar').classList.remove('open');editing=value;document.body.classList.toggle('editing',value);document.querySelectorAll('[data-editable]').forEach(el=>el.setAttribute('contenteditable',value));$('#editor').classList.toggle('open',value);$('#editor').setAttribute('aria-hidden',!value);if(value){document.querySelectorAll('.step-card').forEach(c=>c.classList.remove('collapsed'));setTimeout(()=>document.querySelector('.step-card [data-editable]')?.focus(),250)}}
 function toast(text){const t=$('#toast');t.textContent=text;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 
-$('#editToggleSide').onclick=()=>setEditing(true);$('#closeEditor').onclick=$('#finishEditing').onclick=()=>{save(false);buildNav();setEditing(false);toast('Documento salvo')};
+$('#editToggleSide').onclick=()=>setEditing(true);$('#closeEditor').onclick=$('#finishEditing').onclick=()=>{save(false);buildNav();setEditing(false);toast('Rascunho salvo. Use Publicar no site para compartilhar.')};
 $('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('open');
 function setFocusMode(active){
   if(active&&editing){save(false);buildNav();setEditing(false)}
@@ -125,11 +129,42 @@ $('#textColor').addEventListener('input',event=>{document.execCommand('foreColor
 $('#addParagraph').onclick=()=>{const active=document.activeElement.closest?.('[data-editable]')||document.querySelector('.step-body [data-editable]');const p=document.createElement('p');p.dataset.editable='';p.contentEditable='true';p.innerHTML='Novo parágrafo';active.after(p);p.focus();const selection=getSelection(),range=document.createRange();range.selectNodeContents(p);selection.removeAllRanges();selection.addRange(range);p.addEventListener('input',()=>save(true))};
 $('#deleteBlock').onclick=()=>{const block=document.activeElement.closest?.('[data-editable]');if(block&&confirm('Excluir este bloco de texto?')){block.remove();save(true)}};
 $('#exportContent').onclick=()=>{const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-7-passos.json';a.click();URL.revokeObjectURL(a.href)};
-$('#importContent').onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));location.reload()}catch{toast('Arquivo de backup inválido')}};
-$('#resetContent').onclick=()=>{if(confirm('Restaurar todo o texto original? Suas edições locais serão apagadas.')){localStorage.removeItem(STORAGE_KEY);location.reload()}};
-try{load()}catch(error){
+$('#importContent').onchange=async e=>{try{const data=SharedContent.normalize(JSON.parse(await e.target.files[0].text()));localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,draft:true,baseRevision:published.revision}));location.reload()}catch{toast('Arquivo de backup inválido')}};
+$('#resetContent').onclick=()=>{if(confirm('Descartar este rascunho e abrir a versão publicada? Uma cópia ficará disponível em Recuperar rascunho.'))showPublished()};
+async function start(){try{await load()}catch(error){
   console.error('Falha inesperada ao iniciar o site:',error);
   $('#loading').hidden=false;
   $('#loading').innerHTML=`<div><p><strong>O roteiro não conseguiu iniciar.</strong></p><p>${error.message||'Erro desconhecido'}</p><button class="button primary" id="retryLoad" type="button">Limpar dados e tentar novamente</button></div>`;
   $('#retryLoad').onclick=()=>{try{localStorage.removeItem(STORAGE_KEY)}catch{}location.reload()};
-}
+}}
+start();
+
+$('#viewPublished').onclick=()=>{if(confirm('Abrir o conteúdo publicado? Seu rascunho será guardado como cópia de recuperação neste navegador.'))showPublished()};
+$('#recoverDraft').onclick=()=>{
+  try{const recovery=localStorage.getItem(STORAGE_KEY+'-recovery');if(!recovery){toast('Nenhum rascunho anterior para recuperar');return}const recovered=JSON.parse(recovery);const data=SharedContent.normalize(recovered);localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,draft:true,baseRevision:recovered.baseRevision}));location.reload()}catch{toast('Não foi possível recuperar o rascunho')}
+};
+$('#publishContent').onclick=()=>{save(false);$('#publishMessage').textContent='';$('#publishDialog').showModal();$('#githubToken').focus()};
+$('#cancelPublish').onclick=()=>$('#publishDialog').close();
+$('#publishDialog').addEventListener('close',()=>{$('#githubToken').value=''});
+$('#publishDialog').addEventListener('cancel',event=>{if(publishing)event.preventDefault()});
+$('#publishForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(publishing)return;
+  let token=$('#githubToken').value.trim();$('#githubToken').value='';
+  if(!token){$('#publishMessage').textContent='Informe a credencial do GitHub.';return}
+  publishing=true;$('#confirmPublish').disabled=true;$('#cancelPublish').disabled=true;$('#publishMessage').textContent='Publicando no GitHub...';
+  try{
+    const data=snapshot();
+    const result=await SharedContent.publish(data,token,draftBaseRevision);
+    published=result;publishedAvailable=true;draftBaseRevision=result.revision;
+    clearTimeout(saveTimer);
+    const changed=JSON.stringify(snapshot().content)!==JSON.stringify(data.content)||snapshot().motivation!==data.motivation||snapshot().motivationTitle!==data.motivationTitle;
+    hasDraft=changed;
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...(changed?snapshot():result.snapshot),draft:changed,baseRevision:result.revision}))}catch{console.warn('Publicado, mas sem cache local')}
+    updateSaveStatus();$('#publishDialog').close();
+    if(!changed){buildNav();setEditing(false)}
+    toast('Publicado! O texto já esta disponível ao abrir o site em outro navegador.');
+  }catch(error){$('#publishMessage').textContent=error.message||'Falha de conexão. Seu rascunho foi preservado. Verifique a versão publicada antes de tentar novamente.'}
+  finally{token='';publishing=false;$('#confirmPublish').disabled=false;$('#cancelPublish').disabled=false}
+});
+
+new ResizeObserver(entries=>{document.documentElement.style.setProperty('--editor-height',entries[0].target.getBoundingClientRect().height+'px')}).observe($('#editor'));

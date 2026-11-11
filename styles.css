@@ -22,3 +22,11 @@
 
 .variable-bar .button.ghost{display:block;flex-shrink:0;white-space:nowrap}
 body.focus .variable-bar{display:flex;top:0}
+
+.publish-dialog{width:min(520px,calc(100% - 32px));max-height:90vh;overflow:auto;padding:28px;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.publish-dialog::backdrop{background:#05040abb}.publish-dialog h2{margin:0 0 16px;font-family:Manrope}.publish-dialog p{color:var(--muted);line-height:1.6}.publish-dialog label{display:block;margin-bottom:8px;font-weight:700}.publish-dialog input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}.publish-dialog input:focus{outline:2px solid var(--pink)}.publish-help{font-size:13px}.publish-help a{color:#ff86b8}.publish-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.publish-actions button:disabled{opacity:.5;cursor:wait}#publishMessage{color:#ffd34f}.view-published{position:absolute;bottom:100px;left:22px;width:calc(100% - 44px);padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer}.view-published[hidden]{display:none}.save-status{max-width:215px;font-size:11px}
+
+.editing{padding-top:var(--editor-height,76px)}.editing .topbar,.editing .variable-bar{top:var(--editor-height,76px)}
+@media(max-width:850px){.editing .variable-bar{top:calc(var(--editor-height,132px) + 76px)}}
+
+.editor-toolbar .button.ghost{display:block}.toolbar-link{white-space:nowrap}
