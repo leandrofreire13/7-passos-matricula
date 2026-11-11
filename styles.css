@@ -19,3 +19,6 @@
 .editing .variable-bar{top:76px}
 @media(max-width:900px){.editing .variable-bar{top:132px}}
 @media(max-width:850px){.variable-bar{top:76px}.editing .variable-bar{top:208px}}
+
+.variable-bar .button.ghost{display:block;flex-shrink:0;white-space:nowrap}
+body.focus .variable-bar{display:flex;top:0}

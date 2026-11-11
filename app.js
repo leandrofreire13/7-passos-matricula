@@ -108,6 +108,15 @@ function toast(text){const t=$('#toast');t.textContent=text;t.classList.add('sho
 
 $('#editToggleSide').onclick=()=>setEditing(true);$('#closeEditor').onclick=$('#finishEditing').onclick=()=>{save(false);buildNav();setEditing(false);toast('Documento salvo')};
 $('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('open');
+function setFocusMode(active){
+  if(active&&editing){save(false);buildNav();setEditing(false)}
+  document.body.classList.toggle('focus',active);
+  $('#focusToggle').textContent=active?'Sair do foco':'Modo foco';
+  $('#focusToggle').setAttribute('aria-pressed',String(active));
+}
+$('#focusToggle').onclick=()=>setFocusMode(!document.body.classList.contains('focus'));
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('focus'))setFocusMode(false)});
+
 ['personName','referrerName','sellerName'].forEach(id=>$('#'+id).addEventListener('input',applyVariables));
 $('#clearVariables').onclick=()=>{['personName','referrerName','sellerName'].forEach(id=>$('#'+id).value='');applyVariables();$('#personName').focus()};
 document.querySelectorAll('[data-command]').forEach(button=>button.addEventListener('mousedown',event=>{event.preventDefault();document.execCommand(button.dataset.command,false,null);save(false)}));

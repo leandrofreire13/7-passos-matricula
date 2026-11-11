@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <div class="app-shell">
@@ -31,6 +31,7 @@
         <label><span>Quem indicou</span><input id="referrerName" type="text" placeholder="Ex.: Carlos"></label>
         <label><span>Seu nome</span><input id="sellerName" type="text" placeholder="Ex.: Leandro"></label>
         <button class="clear-variables" id="clearVariables" type="button">Limpar</button>
+        <button class="button ghost" id="focusToggle" type="button" aria-pressed="false">Modo foco</button>
       </section>
 
       <section class="motivation" aria-label="Lembretes importantes">
@@ -64,6 +65,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
